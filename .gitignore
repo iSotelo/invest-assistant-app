@@ -1,0 +1,40 @@
+# Notas locales (no se comparten con el equipo)
+CLAUDE.md
+docs/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Entornos virtuales
+.venv/
+venv/
+ENV/
+env/
+
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Datos y logs locales
+*.db
+*.log
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Sistema operativo / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Cobertura de pruebas
+.coverage
+htmlcov/
