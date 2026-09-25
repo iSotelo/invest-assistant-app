@@ -48,7 +48,8 @@ async def _collect_hybrid_predictions() -> tuple[dict[str, list[int]], dict[str,
     y_true: dict[str, list[int]] = {c: [] for c in INVEST_CRITERIA}
     y_pred: dict[str, list[int]] = {c: [] for c in INVEST_CRITERIA}
 
-    for item in DATASET:
+    for i, item in enumerate(DATASET):
+        print(f"  [{i + 1}/{len(DATASET)}] Evaluando {item['id']}...", flush=True)
         prediction = await hybrid_prediction(item["story_text"], item["project_context"])
         for criterion in INVEST_CRITERIA:
             y_true[criterion].append(item["ground_truth"][criterion])

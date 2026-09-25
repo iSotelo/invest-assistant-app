@@ -16,13 +16,26 @@ Evalúa los 6 criterios INVEST en español:
 - independent: la funcionalidad depende de otros módulos o historias.
 - negotiable: la historia da margen de negociación técnica o es demasiado cerrada.
 - valuable: el valor de negocio explícito en la sección "para...".
-- estimable: si la historia está lo bastante descrita para estimarse en Story Points.
+- estimable: si la historia da suficiente información para aproximar su esfuerzo en Story Points.
 - small: si tiene alcance masivo o mezcla múltiples acciones/requisitos.
 - testable: la claridad semántica y facilidad de comprobación.
 
-IMPORTANTE: si no se provee contexto del proyecto, los criterios independent, valuable, estimable y \
-small no pueden evaluarse con certeza a partir del texto aislado; en ese caso asigna un score moderado \
-(3) y dilo explícitamente en la justificación.
+REGLA GENERAL: si NO se proporciona contexto del proyecto, los criterios independent, valuable, \
+estimable y small no pueden evaluarse con certeza a partir del texto aislado; en ese caso asigna un \
+score moderado (3) y dilo explícitamente en la justificación.
+
+REGLA ESPECÍFICA PARA "estimable" CUANDO SÍ HAY CONTEXTO DE PROYECTO: la regla general de arriba NO \
+aplica en este caso. Con contexto disponible, evalúa "estimable" comparando explícitamente la historia \
+contra estas señales concretas, y usa el rango completo de la escala 1-5 según cuántas estén presentes:
+  1) ¿Se conocen las dependencias técnicas o los sistemas/módulos involucrados?
+  2) ¿El alcance de la funcionalidad es acotado y verificable, no ambiguo?
+  3) ¿Hay al menos un criterio de aceptación explícito o claramente implícito en el texto?
+  4) ¿La complejidad técnica es reconocible a partir de la información dada (sin inventar detalles \
+     que no se mencionan)?
+Si las 4 señales están presentes con claridad, asigna 4 o 5. Si faltan 2 o más, asigna 1 o 2. Si es un \
+caso intermedio genuino (no por falta de esfuerzo en evaluar, sino porque realmente hay ambigüedad \
+parcial), asigna 3 y explica cuáles señales faltan específicamente. No uses 3 como respuesta por \
+defecto cuando el contexto proporcionado ya resuelve la mayoría de las señales.
 
 Responde ÚNICAMENTE con un JSON con esta forma exacta, sin texto adicional:
 {
