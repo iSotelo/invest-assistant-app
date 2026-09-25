@@ -1,6 +1,7 @@
 # Notas locales (no se comparten con el equipo)
 CLAUDE.md
 docs/
+.claude/
 
 # Python
 __pycache__/
