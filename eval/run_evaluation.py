@@ -7,6 +7,7 @@ Precision, Recall y F1-score por criterio INVEST, mas promedios macro/micro.
 Uso:
     python eval/run_evaluation.py                  # sistema hibrido (llama a OpenAI)
     python eval/run_evaluation.py --baseline-only   # solo baseline, sin llamadas a OpenAI
+    python eval/run_evaluation.py --concurrency 10  # controlar llamadas simultaneas al LLM (default 5)
 
 Requiere OPENAI_API_KEY configurada en .env para el modo hibrido.
 """
@@ -42,15 +43,32 @@ def _collect_baseline_predictions() -> tuple[dict[str, list[int]], dict[str, lis
     return y_true, y_pred
 
 
-async def _collect_hybrid_predictions() -> tuple[dict[str, list[int]], dict[str, list[int]]]:
-    """Ejecuta todas las llamadas al LLM dentro de un unico event loop
-    (evita crear/cerrar un cliente HTTP async por cada historia)."""
+async def _collect_hybrid_predictions(concurrency: int = 5) -> tuple[dict[str, list[int]], dict[str, list[int]]]:
+    """Ejecuta las llamadas al LLM en paralelo (hasta `concurrency` simultaneas)
+    dentro de un unico event loop. El paralelismo reduce el tiempo TOTAL del
+    batch (no la latencia de una peticion individual); un semaforo evita
+    disparar las 30 llamadas de golpe y saturar el rate limit de OpenAI."""
+    semaphore = asyncio.Semaphore(concurrency)
+    completed = 0
+    lock = asyncio.Lock()
+
+    async def _predict_one(item: dict) -> tuple[str, dict[str, int]]:
+        nonlocal completed
+        async with semaphore:
+            prediction = await hybrid_prediction(item["story_text"], item["project_context"])
+        async with lock:
+            completed += 1
+            print(f"  [{completed}/{len(DATASET)}] Completado {item['id']}", flush=True)
+        return item["id"], prediction
+
+    results = await asyncio.gather(*(_predict_one(item) for item in DATASET))
+    predictions_by_id = dict(results)
+
     y_true: dict[str, list[int]] = {c: [] for c in INVEST_CRITERIA}
     y_pred: dict[str, list[int]] = {c: [] for c in INVEST_CRITERIA}
 
-    for i, item in enumerate(DATASET):
-        print(f"  [{i + 1}/{len(DATASET)}] Evaluando {item['id']}...", flush=True)
-        prediction = await hybrid_prediction(item["story_text"], item["project_context"])
+    for item in DATASET:
+        prediction = predictions_by_id[item["id"]]
         for criterion in INVEST_CRITERIA:
             y_true[criterion].append(item["ground_truth"][criterion])
             y_pred[criterion].append(prediction[criterion])
@@ -105,6 +123,12 @@ def main() -> None:
         action="store_true",
         help="Solo evalúa el baseline solo-reglas, sin llamar al LLM (más rápido, sin costo de API).",
     )
+    parser.add_argument(
+        "--concurrency",
+        type=int,
+        default=5,
+        help="Número máximo de llamadas simultáneas al LLM en el modo híbrido (default: 5).",
+    )
     args = parser.parse_args()
 
     print(f"Dataset: {len(DATASET)} historias de usuario.")
@@ -117,7 +141,7 @@ def main() -> None:
 
     if not args.baseline_only:
         start = time.time()
-        hybrid_true, hybrid_pred = asyncio.run(_collect_hybrid_predictions())
+        hybrid_true, hybrid_pred = asyncio.run(_collect_hybrid_predictions(concurrency=args.concurrency))
         hybrid_summary = _print_summary("SISTEMA HÍBRIDO (spaCy + LLM)", hybrid_true, hybrid_pred)
         elapsed = time.time() - start
         print(f"\n  Tiempo total híbrido: {elapsed:.1f}s ({elapsed / len(DATASET):.1f}s por historia)")
