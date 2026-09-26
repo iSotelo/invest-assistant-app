@@ -1,8 +1,19 @@
 import os
 
 import requests
+import streamlit as st
 
-BACKEND_API_URL = os.getenv("BACKEND_API_URL", "http://localhost:8000")
+
+def _get_backend_url() -> str:
+    """Resuelve BACKEND_API_URL desde variables de entorno o st.secrets
+    (Streamlit Community Cloud inyecta secretos via st.secrets, no .env)."""
+    try:
+        return st.secrets["BACKEND_API_URL"]
+    except (KeyError, FileNotFoundError):
+        return os.getenv("BACKEND_API_URL", "http://localhost:8000")
+
+
+BACKEND_API_URL = _get_backend_url()
 
 
 def validate_story(story_text: str, project_context: str | None = None, timeout: float = 15.0) -> dict:
