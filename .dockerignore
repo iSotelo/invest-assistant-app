@@ -1,0 +1,16 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.git/
+.github/
+docs/
+CLAUDE.md
+.env
+.env.*
+!.env.example
+frontend/
+eval/
+tests/
+.claude/
