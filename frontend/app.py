@@ -89,7 +89,7 @@ if result:
     story_text = st.session_state.get("last_story_text", "")
     st.download_button(
         "Exportar reporte a CSV",
-        data=build_csv_report(story_text, result),
+        data=build_csv_report(story_text, result).encode("utf-8-sig"),
         file_name="reporte_validacion_invest.csv",
         mime="text/csv",
     )
